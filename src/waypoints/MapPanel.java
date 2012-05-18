@@ -72,7 +72,9 @@ public class MapPanel extends JPanel {
 
     public void setMapRect(double left, double right, double top, double bottom) {
         mapOffset.setLocation(-(left + right) / 2, -(top + bottom) / 2);
-        mapScale.setLocation(1 / (right - left), 1 / (bottom - top));
+        //mapScale.setLocation(1 / (right - left), 1 / (bottom - top));
+        // Reverse this to fix difference between VBS2 coordinate frame and screen coordinate frame
+        mapScale.setLocation(1 / (right - left), 1 / (top - bottom));
     }
 
     public void setMapImage(Image img) {
