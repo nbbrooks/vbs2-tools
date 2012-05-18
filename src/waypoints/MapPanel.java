@@ -25,7 +25,6 @@ import java.util.LinkedHashMap;
 import java.util.logging.Logger;
 import javax.swing.JPanel;
 import javax.swing.event.MouseInputListener;
-import waypoints.Map;
 
 /**
  * A display widget that can display a map background and icon overlays.  It
