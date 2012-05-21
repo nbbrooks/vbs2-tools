@@ -35,7 +35,7 @@ public class MapPanel extends JPanel {
 
     private static final Logger logger = Logger.getLogger(MapPanel.class.getName());
     private static double MIN_DISTANCE = 100; //m
-    private static double ANGLE_INCREMENT = 45.0 * (Math.PI / 180.0); //rad
+    private static double ANGLE_INCREMENT = Math.PI / 4; //rad
     private static final int TARGET_RADIUS = 100;
     private static final double TARGET_SELECT_RANGE_SQD = TARGET_RADIUS * TARGET_RADIUS;
     private static final int TARGET_LENGTH = 100;
@@ -250,39 +250,6 @@ public class MapPanel extends JPanel {
     public void start() {
         new Thread(new Updater()).run();
     }
-
-    public class Target {
-
-        String key;
-        boolean validated = false;
-        boolean highlighted = false;
-        boolean selected = false;
-        double x;
-        double y;
-        double theta;
-        double lat;
-        double lon;
-
-        public Target() {
-        }
-
-        public Target(double x, double y, double theta, boolean validated) {
-            this.x = x;
-            this.y = y;
-            this.theta = theta;
-            this.validated = validated;
-            key = "";
-        }
-
-        public void setPos(double x, double y) {
-            this.x = x;
-            this.y = y;
-        }
-
-        public String toString() {
-            return "[" + x + ", " + y + ", " + theta + "]";
-        }
-    }
     int markerCounter = 0;
     String currentMarkerKey = null;
     Target currentMarker = null;
@@ -423,7 +390,7 @@ public class MapPanel extends JPanel {
             } // Create (1) (set angle)
             else if(currentMarker != null && targetCreationStep == 1) {
                 // Reverse order for y since we are working in pixel space
-                currentMarker.theta = Math.atan2(xyz[1] - currentMarker.y, xyz[0] - currentMarker.x);
+                currentMarker.theta = sanitize(Math.atan2(xyz[1] - currentMarker.y, xyz[0] - currentMarker.x));
                 System.out.println("currentMarker.theta = " + currentMarker.theta + " " + rToD(currentMarker.theta));
                 waypointList.add(currentMarker);
             } // Update location during create (0)
@@ -572,7 +539,7 @@ public class MapPanel extends JPanel {
         }
     }
 
-    private ArrayList<Target> validateWaypoints(ArrayList<Target> waypoints) {
+    public ArrayList<Target> validateWaypoints(ArrayList<Target> waypoints) {
         if(waypoints.size() < 2) {
             for(Target t : waypoints) {
                 System.out.println(t.toString());
@@ -616,8 +583,8 @@ public class MapPanel extends JPanel {
         System.out.println("target2.theta = " + target2.theta + " " + rToD(target2.theta));
 
         // Round to nearest 45 deg to prevent some nasty edge cases
-        t1 = Math.round(target1.theta / ANGLE_INCREMENT) * ANGLE_INCREMENT;
-        t2 = Math.round(target2.theta / ANGLE_INCREMENT) * ANGLE_INCREMENT;
+        t1 = sanitize(Math.round(target1.theta / ANGLE_INCREMENT) * ANGLE_INCREMENT);
+        t2 = sanitize(Math.round(target2.theta / ANGLE_INCREMENT) * ANGLE_INCREMENT);
 
         // Add in MIN_DISTANCE
         s1 = new Segment(target1.x + MIN_DISTANCE * Math.cos(t1), target1.y + MIN_DISTANCE * Math.sin(t1),
@@ -700,8 +667,7 @@ public class MapPanel extends JPanel {
             } // If the first set of orthogonal lines did not have a valid intersection, we will need a second line of orthogonal lines, which are orthogonal to the first set
             else {
                 System.out.println("\ti1_1 invalid");
-                //@todo: sanitize?
-                double t1_2 = t1 + Math.PI;
+                double t1_2 = sanitize(t1 + Math.PI);
                 // Vector parallel to s1 but MIN_DISTANCE to its left
                 Segment s1_2a = new Segment(
                         s1.x1 + MIN_DISTANCE * Math.cos(t1 + dToR(90)), s1.y1 + MIN_DISTANCE * Math.sin(t1 + dToR(90)),
@@ -709,7 +675,7 @@ public class MapPanel extends JPanel {
                         t1_2, true);
                 // Vector parallel to s1 but MIN_DISTANCE to its right
                 Segment s1_2b = new Segment(
-                        s1.x1 + MIN_DISTANCE * Math.cos(t1 - dToR(90)), s1.y1 + MIN_DISTANCE * Math.cos(t1 - dToR(90)),
+                        s1.x1 + MIN_DISTANCE * Math.cos(t1 - dToR(90)), s1.y1 + MIN_DISTANCE * Math.sin(t1 - dToR(90)),
                         target1.x + MIN_DISTANCE * Math.cos(t1 - dToR(90)), target1.y + MIN_DISTANCE * Math.sin(t1 - dToR(90)),
                         t1_2, true);
                 // Vector parallel to s1 starting at s2
@@ -717,21 +683,13 @@ public class MapPanel extends JPanel {
                         s2.x1, s2.y1,
                         s2.x1 + MIN_DISTANCE * Math.cos(t1), s2.y1 + MIN_DISTANCE * Math.sin(t1),
                         t1_2, true);
-                
-                System.out.println("t1 = " + t1 + " " + rToD(t1));
-                System.out.println("t1_1 = " + t1_1 + " " + rToD(t1_1));
-                System.out.println("t1_2 = " + t1_2 + " " + rToD(t1_2));
-                System.out.println(s1_2a.toString());
-                System.out.println(s1_2b.toString());
-                System.out.println(s1_2c.toString());
 
                 // Just use s1_1a for s1_1
-                //@here
                 Intersection i1_2a = getIntersection(s1_2a, s2);
                 Intersection i1_2b = getIntersection(s1_2b, s2);
                 //  We don't actaully know if this intersection will allow a long enough segment on the s1_1a line, unless the above two intersections failed
                 // Unless we made s1_1a into two vectors to eliminate that area....
-                Intersection i1_2c = getIntersection(s1_2c, s1_1a);
+                Intersection i1_2c = getIntersection(s1_1a, s1_2c);
 
                 if(i1_2a.valid) {
                     System.out.println("\t\ti1_2a.valid");
@@ -787,14 +745,15 @@ public class MapPanel extends JPanel {
 
     private WP[] getLoop(double x, double y, double tStart, double tEnd) {
         WP[] loop = new WP[5];
-        double t1 = tStart - dToR(90) + dToR(tEnd - tStart);
+        double t1 = sanitize((sanitize(tStart + 180) + tEnd) / 2 - 225);
         loop[0] = new WP(x, y, t1);
-        for(int i = 1; i < 5; i++) {
+        for(int i = 1; i < 4; i++) {
             loop[i] = new WP(
                     loop[i - 1].x + MIN_DISTANCE * Math.cos(loop[i - 1].t),
                     loop[i - 1].y + MIN_DISTANCE * Math.sin(loop[i - 1].t),
-                    loop[i - 1].t + dToR(90));
+                    sanitize(loop[i - 1].t + Math.PI / 2));
         }
+        loop[4] = new WP(x, y, tEnd);
         return loop;
     }
 
@@ -804,6 +763,16 @@ public class MapPanel extends JPanel {
 
     private double rToD(double r) {
         return r * 180.0 / Math.PI;
+    }
+    
+    private double sanitize(double r) {
+        while(r >= 2 * Math.PI) {
+            r -= 2 * Math.PI;
+        }
+        while(r < 0) {
+            r += 2 * Math.PI;
+        }
+        return r;
     }
 
     private Intersection getIntersection(Segment s1, Segment s2) {
@@ -822,13 +791,14 @@ public class MapPanel extends JPanel {
         // Find the distance from intersection to wp2
         d2 = Math.sqrt(Math.pow(s2.x1 - x, 2) + Math.pow(s2.y1 - y, 2));
 
-        // Case 1: Intersection does not fall in front of wp1 and behind wp2
-        if(s1.isVector && (Math.signum(x - s1.x1) != Math.signum(Math.cos(s1.t))
-                || Math.signum(y - s1.y1) != Math.signum(Math.sin(s1.t)))) {
+        if(s1.isVector && (
+                (Math.abs(x - s1.x1) > 1e-3 && Math.signum(x - s1.x1) != Math.signum(Math.cos(s1.t)) || 
+                (Math.abs(y - s1.y1) > 1e-3 && Math.signum(y - s1.y1) != Math.signum(Math.sin(s1.t)))))) {
             d1 *= -1;
         }
-        if(s2.isVector && (Math.signum(s2.x1 - x) != Math.signum(Math.cos(s2.t))
-                || Math.signum(s2.y1 - y) != Math.signum(Math.sin(s2.t)))) {
+        if(s2.isVector && (
+                (Math.abs(s2.x1 - x) > 1e-3 && Math.signum(s2.x1 - x) != Math.signum(Math.cos(s2.t)) || 
+                (Math.abs(s2.y1 - y) > 1e-3 && Math.signum(s2.y1 - y) != Math.signum(Math.sin(s2.t)))))) {
             d2 *= -1;
         }
         return new Intersection(x, y, d1, d2, (d1 >= 0 && d2 >= 0));
@@ -845,7 +815,7 @@ public class MapPanel extends JPanel {
         }
 
         public String toString() {
-            return "WP: " + x + " " + y + " " + t;
+            return "WP: " + x + " " + y + " " + t + " " + rToD(t);
         }
     }
 
@@ -864,7 +834,7 @@ public class MapPanel extends JPanel {
         }
 
         public String toString() {
-            return "Segment: " + x1 + " " + y1 + " " + x2 + " " + y2 + " " + t;
+            return "Segment: " + x1 + " " + y1 + " " + x2 + " " + y2 + " " + t + " " + rToD(t);
         }
     }
 

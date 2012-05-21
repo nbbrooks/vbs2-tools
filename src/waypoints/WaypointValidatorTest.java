@@ -10,6 +10,7 @@ import java.awt.Dimension;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.border.LineBorder;
@@ -19,14 +20,13 @@ import javax.swing.border.LineBorder;
  * @author nbb
  */
 public class WaypointValidatorTest {
-    
+
     protected MapPanel mapPanel;
     protected JFrame mapFrame;
-    
+
     public WaypointValidatorTest() {
         create2dMap(Map.mapToLocalCorners.get("warminster"), Map.mapToAerialMap.get("warminster"));
     }
-    
 
     private void create2dMap(double[] bounds, String aerialMapLocation) {
         // Bounds consisis of VBS2 coordiantes for
@@ -41,7 +41,7 @@ public class WaypointValidatorTest {
         mapFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         mapFrame.setVisible(true);
 
-        if (bounds.length != 4) {
+        if(bounds.length != 4) {
             System.err.print("Argument bounds is of length " + bounds.length
                     + "; should be length 4.");
             return;
@@ -52,12 +52,12 @@ public class WaypointValidatorTest {
             mapPanel.setMapImage(img);
             mapPanel.setMapRect(bounds[0], bounds[1], bounds[2], bounds[3]); // Warminster bounds
             mapPanel.repaint();
-        } catch (IOException e) {
+        } catch(IOException e) {
             System.err.println("Failed to load aerial map at: " + aerialMapLocation);
             String currentDir = new File(".").getAbsolutePath();
             System.err.println("Current directory: " + currentDir);
         }
-        while (mapPanel.isPaintingTile()) {
+        while(mapPanel.isPaintingTile()) {
             wait(1000);
         }
     }
@@ -65,12 +65,43 @@ public class WaypointValidatorTest {
     public void wait(int ms) {
         try {
             Thread.sleep(ms);
-        } catch (Exception e) {
+        } catch(Exception e) {
             e.printStackTrace();
         }
     }
-    
+
     public static void main(String[] args) {
+        // Interactive
         WaypointValidatorTest waypointValidatorTest = new WaypointValidatorTest();
+
+        // Manual
+//        MapPanel map = new MapPanel();
+//        ArrayList<Target> targetList = new ArrayList<Target>();
+//        ArrayList<Target> targetList2;
+//        targetList.add(new Target(2500, 2500, Math.PI / 2, false));
+//        targetList.add(new Target(2000, 1800, Math.PI / 4, false));
+//        targetList2 = map.validateWaypoints(targetList);
+
+        double[] tS = {90, 270, 270, 270, 45, 135, 90, 315, 91.39718102729641};
+        double[] tE = {270, 90, 45, 135, 270, 270, 315, 90, 308.6598082540901};
+
+        for(int i = 0; i < tS.length; i++) {
+//            System.out.println(tS[i] + "\t" + tE[i] + "\t" + sanitize(tS[i] - 45 + (180 - (tE[i] - tS[i])) / 2));
+//            System.out.println(tS[i] + "\t" + tE[i] + "\t" + sanitize(90 + (180 - (tE[i] - tS[i])) / 2));
+//            System.out.println(tS[i] + "\t" + tE[i] + "\t" + sanitize(tS[i] - 45 + Math.signum(180 - Math.abs(tE[i] - tS[i])) * Math.abs(180 - Math.abs(tE[i] - tS[i])) / 2));
+//            System.out.println(tS[i] + "\t" + tE[i] + "\t" + sanitize(tS[i] - 45 + (180 - Math.abs(tE[i] - tS[i])) / 2));
+            System.out.println(tS[i] + "\t" + tE[i] + "\t" + sanitize((sanitize(tS[i] + 180) + tE[i]) / 2 - 225));
+        }
+
+    }
+
+    private static double sanitize(double d) {
+        while(d >= 360) {
+            d -= 360;
+        }
+        while(d < 0) {
+            d += 360;
+        }
+        return d;
     }
 }
