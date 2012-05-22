@@ -82,15 +82,27 @@ public class WaypointValidatorTest {
 //        targetList.add(new Target(2000, 3200, 7 * Math.PI / 4, false));
 //        targetList2 = map.validateWaypoints(targetList);
 
-//        double[] tS = {179.9};
-//        double[] tE = {315};
+//        double[] tS = {180, 0, 225, 90, 179, 315, 181, 315};
+//        double[] tE = {0, 180, 90, 225, 315, 179, 315, 181};
 //        for(int i = 0; i < tS.length; i++) {
 //            //System.out.println(tS[i] + "\t" + tE[i] + "\t" + sanitize(tS[i] - 45 + (180 - (tE[i] - tS[i])) / 2));
 //            //System.out.println(tS[i] + "\t" + tE[i] + "\t" + sanitize(90 + (180 - (tE[i] - tS[i])) / 2));
 //            //System.out.println(tS[i] + "\t" + tE[i] + "\t" + sanitize(tS[i] - 45 + Math.signum(180 - Math.abs(tE[i] - tS[i])) * Math.abs(180 - Math.abs(tE[i] - tS[i])) / 2));
 //            //System.out.println(tS[i] + "\t" + tE[i] + "\t" + sanitize(tS[i] - 45 + (180 - Math.abs(tE[i] - tS[i])) / 2));
-//            System.out.println(tS[i] + "\t" + tE[i] + "\t" + sanitize((sanitize(tS[i] + 180) + tE[i]) / 2 - 225));
+//            //System.out.println(tS[i] + "\t" + tE[i] + "\t" + sanitize((sanitize(tS[i] + 180) + tE[i]) / 2 - 225));
+////            System.out.println(tS[i] + "\t" + tE[i] + "\t" + sanitize((tS[i] + sanitize(tE[i] + 180)) / 2 - 45));
+////            System.out.println(tS[i] + "\t" + tE[i] + "\t" + sanitize((tS[i] + tE[i] + 180) / 2 - 45));
+//            System.out.println(tS[i] + "\t" + tE[i] + "\t" + (tS[i] + tE[i] + 180) + "\t" + firstLoop(tS[i], tE[i]));
 //        }
+    }
+    
+    private static double firstLoop(double t1, double t2) {
+        if(t1 > t2) {
+            t2 += 180;
+        } else if( t1 < t2) {
+            t2 -= 180;
+        }
+        return sanitize((t1 + t2) / 2 - 45);
     }
 
     private static double sanitize(double d) {

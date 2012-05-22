@@ -593,201 +593,282 @@ public class MapPanel extends JPanel {
         s2 = new Segment(target2.x - MIN_DISTANCE * Math.cos(t2), target2.y - MIN_DISTANCE * Math.sin(t2),
                 target2.x - 2 * MIN_DISTANCE * Math.cos(t2), target2.y - 2 * MIN_DISTANCE * Math.sin(t2),
                 t2, true);
-        Intersection intersection = getIntersection(s1, s2);
+        Intersection i_s1_to_s2 = getIntersection(s1, s2);
 
         // Add s1 to new waypoint list
-//        wps.add(new WP(s1.x1, s1.y1, t1));
+        wps.add(new WP(s1.x1, s1.y1, t1));
 
         // Case 1: Intersection is in front of WP1 and behind WP2
-        if (intersection.d1 >= 0 && intersection.d2 >= 0) {
+        if (i_s1_to_s2.d1 >= 0 && i_s1_to_s2.d2 >= 0) {
             System.out.println("CASE 1");
 
-            if (loopNeeded(t1, t2)) {
+            if (loopNeeded(i_s1_to_s2.t1, t2)) {
                 System.out.println("\tloop");
-                WP[] loopWPs = getLoop(intersection.x, intersection.y, t1, t2);
+                WP[] loopWPs = getLoop(i_s1_to_s2.x, i_s1_to_s2.y, i_s1_to_s2.t1, t2);
                 for (int i = 0; i < loopWPs.length; i++) {
                     wps.add(loopWPs[i]);
                 }
             } else {
-                wps.add(new WP(intersection.x, intersection.y, intersection.t2));
+                wps.add(new WP(i_s1_to_s2.x, i_s1_to_s2.y, i_s1_to_s2.t2));
             }
         }
         // Case 2: Intersection is in front of WP1 but in front of WP2
-        if (intersection.d1 >= 0 && intersection.d2 < 0) {
+        if (i_s1_to_s2.d1 >= 0 && i_s1_to_s2.d2 < 0) {
             System.out.println("CASE 2");
 
             // Make a set of 2 lines which are orthogonal to wp1, one intersecting with s1 and one intersecting with s2
-            double t1_1 = t1 + dToR(90);
-            Segment s1_1a = new Segment(s1.x1, s1.y1,
-                    s1.x1 + MIN_DISTANCE * Math.cos(t1_1), s1.y1 + MIN_DISTANCE * Math.sin(t1_1),
-                    t1_1, false);
-            Segment s1_1b = new Segment(s2.x1, s2.y1,
-                    s2.x1 + MIN_DISTANCE * Math.cos(t1_1), s2.y1 + MIN_DISTANCE * Math.sin(t1_1),
-                    t1_1, false);
-            Intersection i1_1a = getIntersection(s1_1a, s2);
-            Intersection i1_1b = getIntersection(s1, s1_1b);
-            
-            System.out.println(s1_1a);
-            System.out.println(s1_1b);
-            System.out.println(i1_1a);
-            System.out.println(i1_1b);
+            double tA = t1 + dToR(90);
+            Segment sA1 = new Segment(s1.x1, s1.y1,
+                    s1.x1 + MIN_DISTANCE * Math.cos(tA), s1.y1 + MIN_DISTANCE * Math.sin(tA),
+                    tA, false);
+            Segment sA2 = new Segment(s2.x1, s2.y1,
+                    s2.x1 + MIN_DISTANCE * Math.cos(tA), s2.y1 + MIN_DISTANCE * Math.sin(tA),
+                    tA, false);
+            Intersection i_sA1_to_s2 = getIntersection(sA1, s2);
+            Intersection i_s1_to_sA2 = getIntersection(s1, sA2);
 
             // If we have a valid intersection, add it along with any necessary looops
             //@todo: Choose best intersection
-            if (i1_1a.valid) {
+            if (i_sA1_to_s2.valid) {
                 System.out.println("\ti1_1a.valid");
-                wps.add(new WP(i1_1a.x, i1_1a.y, i1_1a.t2));
-                Intersection i1_2 = getIntersection(s1_1a, s2);
+                wps.add(new WP(i_sA1_to_s2.x, i_sA1_to_s2.y, i_sA1_to_s2.t2));
 
-                if (loopNeeded(i1_1a.t2, t2)) {
+                if (loopNeeded(i_sA1_to_s2.t2, t2)) {
                     System.out.println("\tloop");
-                    WP[] loopWPs = getLoop(s2.x1, s2.y1, i1_1a.t2, t2);
+                    WP[] loopWPs = getLoop(s2.x1, s2.y1, i_sA1_to_s2.t2, t2);
                     for (int i = 0; i < loopWPs.length; i++) {
                         wps.add(loopWPs[i]);
                     }
                 } else {
-                    wps.add(new WP(s2.x1, s2.y1, i1_1a.t2));
+                    wps.add(new WP(s2.x1, s2.y1, i_sA1_to_s2.t2));
                 }
-            } else if (i1_1b.valid) {
+            } else if (i_s1_to_sA2.valid) {
                 System.out.println("\ti1_1b.valid");
-                wps.add(new WP(i1_1b.x, i1_1b.y, i1_1b.t2));
-                Intersection i1_2 = getIntersection(s1_1b, s2);
+                wps.add(new WP(i_s1_to_sA2.x, i_s1_to_sA2.y, i_s1_to_sA2.t2));
 
-                if (loopNeeded(i1_1b.t2, t2)) {
+                if (loopNeeded(i_s1_to_sA2.t2, t2)) {
                     System.out.println("\tloop");
-                    WP[] loopWPs = getLoop(s2.x1, s2.y1, i1_1b.t2, t2);
+                    WP[] loopWPs = getLoop(s2.x1, s2.y1, i_s1_to_sA2.t2, t2);
                     for (int i = 0; i < loopWPs.length; i++) {
                         wps.add(loopWPs[i]);
                     }
                 } else {
-                    wps.add(new WP(s2.x1, s2.y1, i1_1b.t2));
+                    wps.add(new WP(s2.x1, s2.y1, i_s1_to_sA2.t2));
                 }
-            } // If the first set of orthogonal lines did not have a valid intersection, we will need a second line of orthogonal lines, which are orthogonal to the first set
-            else {
-                System.out.println("\ti1_1a and i1_1b are both invalid - something went wrong!");
             }
         }
         // Case 3: Intersection is behind WP1 and behind WP2
-        if (intersection.d1 < 0 && intersection.d2 >= 0) {
+        if (i_s1_to_s2.d1 < 0 && i_s1_to_s2.d2 >= 0) {
             System.out.println("CASE 3");
 
-        }
-        // Case 4: Intersection is behind WP1 but in front of WP2
-        if (intersection.d1 < 0 && intersection.d2 < 0) {
-            System.out.println("CASE 4");
-
             // Make a set of 2 lines which are orthogonal to wp1, one intersecting with s1 and one intersecting with s2
-            double t1_1 = t1 + dToR(90);
-            Segment s1_1a = new Segment(s1.x1, s1.y1,
-                    s1.x1 + MIN_DISTANCE * Math.cos(t1_1), s1.y1 + MIN_DISTANCE * Math.sin(t1_1),
-                    t1_1, false);
-            Segment s1_1b = new Segment(s2.x1, s2.y1,
-                    s2.x1 + MIN_DISTANCE * Math.cos(t1_1), s2.y1 + MIN_DISTANCE * Math.sin(t1_1),
-                    t1_1, false);
-            Intersection i1_1a = getIntersection(s1_1a, s2);
-            Intersection i1_1b = getIntersection(s1, s1_1b);
+            double tA = t1 + dToR(90);
+            Segment sA = new Segment(s1.x1, s1.y1,
+                    s1.x1 + MIN_DISTANCE * Math.cos(tA), s1.y1 + MIN_DISTANCE * Math.sin(tA),
+                    tA, false);
+            Intersection i_sA_to_s2 = getIntersection(sA, s2);
 
             // If we have a valid intersection, add it along with any necessary looops
-            //@todo: Choose best intersection
-            if (i1_1a.valid) {
-                System.out.println("\ti1_1a.valid");
+            if (i_sA_to_s2.valid) {
+                System.out.println("\ti1_1.valid");
 
-                if (loopNeeded(t1_1, t2)) {
+                if (loopNeeded(i_sA_to_s2.t1, t2)) {
                     System.out.println("\tloop");
-                    WP[] loopWPs = getLoop(i1_1a.x, i1_1a.y, t1_1, t2);
+                    WP[] loopWPs = getLoop(i_sA_to_s2.x, i_sA_to_s2.y, i_sA_to_s2.t1, t2);
                     for (int i = 0; i < loopWPs.length; i++) {
                         wps.add(loopWPs[i]);
                     }
                 } else {
-                    wps.add(new WP(i1_1a.x, i1_1a.y, t2));
-                }
-            } else if (i1_1b.valid) {
-                System.out.println("\ti1_1b.valid");
-
-                if (loopNeeded(t1_1, t2)) {
-                    System.out.println("\tloop");
-                    WP[] loopWPs = getLoop(i1_1b.x, i1_1b.y, t1_1, t2);
-                    for (int i = 0; i < loopWPs.length; i++) {
-                        wps.add(loopWPs[i]);
-                    }
-                } else {
-                    wps.add(new WP(i1_1b.x, i1_1b.y, t2));
+                    wps.add(new WP(i_sA_to_s2.x, i_sA_to_s2.y, t2));
                 }
             } // If the first set of orthogonal lines did not have a valid intersection, we will need a second line of orthogonal lines, which are orthogonal to the first set
             else {
                 System.out.println("\ti1_1 invalid");
-                double t1_2 = sanitize(t1 + Math.PI);
+                double tB = sanitize(t1 + Math.PI);
                 // Vector parallel to s1 but MIN_DISTANCE to its left
-                Segment s1_2a = new Segment(
+                Segment sB1 = new Segment(
                         s1.x1 + MIN_DISTANCE * Math.cos(t1 + dToR(90)), s1.y1 + MIN_DISTANCE * Math.sin(t1 + dToR(90)),
                         target1.x + MIN_DISTANCE * Math.cos(t1 + dToR(90)), target1.y + MIN_DISTANCE * Math.sin(t1 + dToR(90)),
-                        t1_2, true);
+                        tB, true);
                 // Vector parallel to s1 but MIN_DISTANCE to its right
-                Segment s1_2b = new Segment(
+                Segment sB2 = new Segment(
                         s1.x1 + MIN_DISTANCE * Math.cos(t1 - dToR(90)), s1.y1 + MIN_DISTANCE * Math.sin(t1 - dToR(90)),
                         target1.x + MIN_DISTANCE * Math.cos(t1 - dToR(90)), target1.y + MIN_DISTANCE * Math.sin(t1 - dToR(90)),
-                        t1_2, true);
+                        tB, true);
                 // Vector parallel to s1 starting at s2
-                Segment s1_2c = new Segment(
+                Segment sB3 = new Segment(
                         s2.x1, s2.y1,
                         s2.x1 + MIN_DISTANCE * Math.cos(t1), s2.y1 + MIN_DISTANCE * Math.sin(t1),
-                        t1_2, true);
+                        tB, true);
 
                 // Just use s1_1a for s1_1
-                Intersection i1_2a = getIntersection(s1_2a, s2);
-                Intersection i1_2b = getIntersection(s1_2b, s2);
+                Intersection i_sB1_to_s2 = getIntersection(sB1, s2);
+                Intersection i_sB2_to_s2 = getIntersection(sB2, s2);
                 //  We don't actaully know if this intersection will allow a long enough segment on the s1_1a line, unless the above two intersections failed
                 // Unless we made s1_1a into two vectors to eliminate that area....
-                Intersection i1_2c = getIntersection(s1_1a, s1_2c);
+                Intersection i_sA_to_sB3 = getIntersection(sA, sB3);
 
-                if (i1_2a.valid) {
+                if (i_sB1_to_s2.valid) {
                     System.out.println("\t\ti1_2a.valid");
                     // Add intersection between s1_1 and s1_2a
-                    wps.add(new WP(s1_2a.x1, s1_2a.y1, t1_2));
+                    wps.add(new WP(sB1.x1, sB1.y1, i_sB1_to_s2.t2));
                     // Do we need a loop at the intersection of s1_2a and s2?
-                    if (loopNeeded(t1_2, t2)) {
+                    if (loopNeeded(i_sB1_to_s2.t2, t2)) {
                         System.out.println("\t\tloop");
-                        WP[] loopWPs = getLoop(i1_2a.x, i1_2a.y, t1_2, t2);
+                        WP[] loopWPs = getLoop(i_sB1_to_s2.x, i_sB1_to_s2.y, i_sB1_to_s2.t2, t2);
                         for (int i = 0; i < loopWPs.length; i++) {
                             wps.add(loopWPs[i]);
                         }
                     } else {
-                        wps.add(new WP(i1_2a.x, i1_2a.y, t2));
+                        wps.add(new WP(i_sB1_to_s2.x, i_sB1_to_s2.y, t2));
                     }
-                } else if (i1_2b.valid) {
+                } else if (i_sB2_to_s2.valid) {
                     System.out.println("\t\ti1_2b.valid");
                     // Add intersection between s1_1 and s1_2b
-                    wps.add(new WP(s1_2b.x1, s1_2b.y1, t1_2));
+                    wps.add(new WP(sB2.x1, sB2.y1, i_sB2_to_s2.t2));
                     // Do we need a loop at the intersection of s1_2a and s2?
-                    if (loopNeeded(t1_2, t2)) {
+                    if (loopNeeded(i_sB2_to_s2.t2, t2)) {
                         System.out.println("\t\tloop");
-                        WP[] loopWPs = getLoop(i1_2b.x, i1_2b.y, t1_2, t2);
+                        WP[] loopWPs = getLoop(i_sB2_to_s2.x, i_sB2_to_s2.y, i_sB2_to_s2.t2, t2);
                         for (int i = 0; i < loopWPs.length; i++) {
                             wps.add(loopWPs[i]);
                         }
                     } else {
-                        wps.add(new WP(i1_2a.x, i1_2a.y, t2));
+                        wps.add(new WP(i_sB1_to_s2.x, i_sB1_to_s2.y, t2));
                     }
-                } else if (i1_2c.valid) {
+                } else if (i_sA_to_sB3.valid) {
                     System.out.println("\t\ti1_2c.valid");
                     // Add intersection between s1_1 and s1_2c
-                    wps.add(new WP(i1_2c.x, i1_2c.y, t1_2));
+                    wps.add(new WP(i_sA_to_sB3.x, i_sA_to_sB3.y, i_sA_to_sB3.t2));
                     // Do we need a loop at the intersection of s1_2c and s2?
-                    if (loopNeeded(t1_2, t2)) {
+                    if (loopNeeded(i_sA_to_sB3.t2, t2)) {
                         System.out.println("\t\tloop");
-                        WP[] loopWPs = getLoop(s1_2c.x1, s1_2c.y1, t1_2, t2);
+                        WP[] loopWPs = getLoop(sB3.x1, sB3.y1, i_sA_to_sB3.t2, t2);
                         for (int i = 0; i < loopWPs.length; i++) {
                             wps.add(loopWPs[i]);
                         }
                     } else {
-                        wps.add(new WP(s1_2c.x1, s1_2c.y1, t2));
+                        wps.add(new WP(sB3.x1, sB3.y1, t2));
+                    }
+                }
+            }
+        }
+        // Case 4: Intersection is behind WP1 but in front of WP2
+        if (i_s1_to_s2.d1 < 0 && i_s1_to_s2.d2 < 0) {
+            System.out.println("CASE 4");
+
+            // Make a set of 2 lines which are orthogonal to wp1, one intersecting with s1 and one intersecting with s2
+            double tA = t1 + dToR(90);
+            Segment sA1 = new Segment(s1.x1, s1.y1,
+                    s1.x1 + MIN_DISTANCE * Math.cos(tA), s1.y1 + MIN_DISTANCE * Math.sin(tA),
+                    tA, false);
+            Segment sA2 = new Segment(s2.x1, s2.y1,
+                    s2.x1 + MIN_DISTANCE * Math.cos(tA), s2.y1 + MIN_DISTANCE * Math.sin(tA),
+                    tA, false);
+            Intersection i_sA1_to_s2 = getIntersection(sA1, s2);
+            Intersection i_s1_to_sA2 = getIntersection(s1, sA2);
+
+            // If we have a valid intersection, add it along with any necessary looops
+            //@todo: Choose best intersection
+            if (i_sA1_to_s2.valid) {
+                System.out.println("\ti1_1a.valid");
+
+                if (loopNeeded(i_sA1_to_s2.t2, t2)) {
+                    System.out.println("\tloop");
+                    WP[] loopWPs = getLoop(i_sA1_to_s2.x, i_sA1_to_s2.y, i_sA1_to_s2.t2, t2);
+                    for (int i = 0; i < loopWPs.length; i++) {
+                        wps.add(loopWPs[i]);
+                    }
+                } else {
+                    wps.add(new WP(i_sA1_to_s2.x, i_sA1_to_s2.y, t2));
+                }
+            } else if (i_s1_to_sA2.valid) {
+                System.out.println("\ti1_1b.valid");
+
+                if (loopNeeded(i_s1_to_sA2.t2, t2)) {
+                    System.out.println("\tloop");
+                    WP[] loopWPs = getLoop(i_s1_to_sA2.x, i_s1_to_sA2.y, i_s1_to_sA2.t2, t2);
+                    for (int i = 0; i < loopWPs.length; i++) {
+                        wps.add(loopWPs[i]);
+                    }
+                } else {
+                    wps.add(new WP(i_s1_to_sA2.x, i_s1_to_sA2.y, t2));
+                }
+            } // If the first set of orthogonal lines did not have a valid intersection, we will need a second line of orthogonal lines, which are orthogonal to the first set
+            else {
+                System.out.println("\ti1_1 invalid");
+                double tB = sanitize(t1 + Math.PI);
+                // Vector parallel to s1 but MIN_DISTANCE to its left
+                Segment sB1 = new Segment(
+                        s1.x1 + MIN_DISTANCE * Math.cos(t1 + dToR(90)), s1.y1 + MIN_DISTANCE * Math.sin(t1 + dToR(90)),
+                        target1.x + MIN_DISTANCE * Math.cos(t1 + dToR(90)), target1.y + MIN_DISTANCE * Math.sin(t1 + dToR(90)),
+                        tB, true);
+                // Vector parallel to s1 but MIN_DISTANCE to its right
+                Segment sB2 = new Segment(
+                        s1.x1 + MIN_DISTANCE * Math.cos(t1 - dToR(90)), s1.y1 + MIN_DISTANCE * Math.sin(t1 - dToR(90)),
+                        target1.x + MIN_DISTANCE * Math.cos(t1 - dToR(90)), target1.y + MIN_DISTANCE * Math.sin(t1 - dToR(90)),
+                        tB, true);
+                // Vector parallel to s1 starting at s2
+                Segment sB3 = new Segment(
+                        s2.x1, s2.y1,
+                        s2.x1 + MIN_DISTANCE * Math.cos(t1), s2.y1 + MIN_DISTANCE * Math.sin(t1),
+                        tB, true);
+
+                // Just use s1_1a for s1_1
+                Intersection i_sB1_to_s2 = getIntersection(sB1, s2);
+                Intersection i_sB2_to_s2 = getIntersection(sB2, s2);
+                //  We don't actaully know if this intersection will allow a long enough segment on the s1_1a line, unless the above two intersections failed
+                // Unless we made s1_1a into two vectors to eliminate that area....
+                Intersection i_sA1_to_sB3 = getIntersection(sA1, sB3);
+
+                if (i_sB1_to_s2.valid) {
+                    System.out.println("\t\ti1_2a.valid");
+                    // Add intersection between s1_1 and s1_2a
+                    wps.add(new WP(sB1.x1, sB1.y1, i_sB1_to_s2.t2));
+                    // Do we need a loop at the intersection of s1_2a and s2?
+                    if (loopNeeded(i_sB1_to_s2.t2, t2)) {
+                        System.out.println("\t\tloop");
+                        WP[] loopWPs = getLoop(i_sB1_to_s2.x, i_sB1_to_s2.y, i_sB1_to_s2.t2, t2);
+                        for (int i = 0; i < loopWPs.length; i++) {
+                            wps.add(loopWPs[i]);
+                        }
+                    } else {
+                        wps.add(new WP(i_sB1_to_s2.x, i_sB1_to_s2.y, t2));
+                    }
+                } else if (i_sB2_to_s2.valid) {
+                    System.out.println("\t\ti1_2b.valid");
+                    // Add intersection between s1_1 and s1_2b
+                    wps.add(new WP(sB2.x1, sB2.y1, i_sB2_to_s2.t2));
+                    // Do we need a loop at the intersection of s1_2a and s2?
+                    if (loopNeeded(i_sB2_to_s2.t2, t2)) {
+                        System.out.println("\t\tloop");
+                        WP[] loopWPs = getLoop(i_sB2_to_s2.x, i_sB2_to_s2.y, i_sB2_to_s2.t2, t2);
+                        for (int i = 0; i < loopWPs.length; i++) {
+                            wps.add(loopWPs[i]);
+                        }
+                    } else {
+                        wps.add(new WP(i_sB1_to_s2.x, i_sB1_to_s2.y, t2));
+                    }
+                } else if (i_sA1_to_sB3.valid) {
+                    System.out.println("\t\ti1_2c.valid");
+                    // Add intersection between s1_1 and s1_2c
+                    wps.add(new WP(i_sA1_to_sB3.x, i_sA1_to_sB3.y, i_sA1_to_sB3.t2));
+                    // Do we need a loop at the intersection of s1_2c and s2?
+                    if (loopNeeded(i_sA1_to_sB3.t2, t2)) {
+                        System.out.println("\t\tloop");
+                        WP[] loopWPs = getLoop(sB3.x1, sB3.y1, i_sA1_to_sB3.t2, t2);
+                        for (int i = 0; i < loopWPs.length; i++) {
+                            wps.add(loopWPs[i]);
+                        }
+                    } else {
+                        wps.add(new WP(sB3.x1, sB3.y1, t2));
                     }
                 }
             }
         }
 
         // Add s2 to new waypoint list
-//        wps.add(new WP(s2.x1, s2.y1, t2));
+//        wps.add(new WP(sB.x1, sB.y1, t2));
 
         return wps;
     }
@@ -799,7 +880,15 @@ public class MapPanel extends JPanel {
     private WP[] getLoop(double x, double y, double tStart, double tEnd) {
         System.out.println(x + "\t" + y + "\t" + tStart + "\t" + tEnd + "\t" + rToD(tStart) + "\t" + rToD(tEnd));
         WP[] loop = new WP[5];
-        double t1 = sanitize((sanitize(tStart + Math.PI) + tEnd) / 2 - 5 * Math.PI / 4);
+        
+        double t1;
+        if(tStart > tEnd) {
+            t1 = sanitize((tStart + tEnd + 180) / 2 - 45);
+        } else if( tStart < tEnd) {
+            t1 = sanitize((tStart + tEnd - 180) / 2 - 45);
+        } else {
+            t1 = sanitize((tStart + tEnd) / 2 - 45);
+        }
         loop[0] = new WP(x, y, t1);
         for (int i = 1; i < 4; i++) {
             loop[i] = new WP(
