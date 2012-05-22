@@ -79,20 +79,18 @@ public class WaypointValidatorTest {
 //        ArrayList<Target> targetList = new ArrayList<Target>();
 //        ArrayList<Target> targetList2;
 //        targetList.add(new Target(2500, 2500, Math.PI / 2, false));
-//        targetList.add(new Target(2000, 1800, Math.PI / 4, false));
+//        targetList.add(new Target(2000, 3200, 7 * Math.PI / 4, false));
 //        targetList2 = map.validateWaypoints(targetList);
 
-        double[] tS = {90, 270, 270, 270, 45, 135, 90, 315, 91.39718102729641};
-        double[] tE = {270, 90, 45, 135, 270, 270, 315, 90, 308.6598082540901};
-
-        for(int i = 0; i < tS.length; i++) {
-//            System.out.println(tS[i] + "\t" + tE[i] + "\t" + sanitize(tS[i] - 45 + (180 - (tE[i] - tS[i])) / 2));
-//            System.out.println(tS[i] + "\t" + tE[i] + "\t" + sanitize(90 + (180 - (tE[i] - tS[i])) / 2));
-//            System.out.println(tS[i] + "\t" + tE[i] + "\t" + sanitize(tS[i] - 45 + Math.signum(180 - Math.abs(tE[i] - tS[i])) * Math.abs(180 - Math.abs(tE[i] - tS[i])) / 2));
-//            System.out.println(tS[i] + "\t" + tE[i] + "\t" + sanitize(tS[i] - 45 + (180 - Math.abs(tE[i] - tS[i])) / 2));
-            System.out.println(tS[i] + "\t" + tE[i] + "\t" + sanitize((sanitize(tS[i] + 180) + tE[i]) / 2 - 225));
-        }
-
+//        double[] tS = {179.9};
+//        double[] tE = {315};
+//        for(int i = 0; i < tS.length; i++) {
+//            //System.out.println(tS[i] + "\t" + tE[i] + "\t" + sanitize(tS[i] - 45 + (180 - (tE[i] - tS[i])) / 2));
+//            //System.out.println(tS[i] + "\t" + tE[i] + "\t" + sanitize(90 + (180 - (tE[i] - tS[i])) / 2));
+//            //System.out.println(tS[i] + "\t" + tE[i] + "\t" + sanitize(tS[i] - 45 + Math.signum(180 - Math.abs(tE[i] - tS[i])) * Math.abs(180 - Math.abs(tE[i] - tS[i])) / 2));
+//            //System.out.println(tS[i] + "\t" + tE[i] + "\t" + sanitize(tS[i] - 45 + (180 - Math.abs(tE[i] - tS[i])) / 2));
+//            System.out.println(tS[i] + "\t" + tE[i] + "\t" + sanitize((sanitize(tS[i] + 180) + tE[i]) / 2 - 225));
+//        }
     }
 
     private static double sanitize(double d) {
