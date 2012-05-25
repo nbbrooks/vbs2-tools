@@ -37,6 +37,6 @@ public class Target {
     }
 
     public String toString() {
-        return "[" + x + ", " + y + ", " + theta + ", " + (theta * 180.0 / Math.PI) + "]";
+        return "[" + x + ", " + y + ", " + theta + ", " + (theta * 180.0 / Math.PI) + ", " + validated + "]";
     }
 }

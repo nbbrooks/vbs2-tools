@@ -553,13 +553,14 @@ public class MapPanel extends JPanel {
             target1 = waypoints.get(i - 1);
             target2 = waypoints.get(i);
             if (!target1.validated || !target2.validated) {
+                System.out.println("Validate @" + i + "\t" + target1.validated + "\t" + target2.validated);
                 validatedPair = validatePair(waypoints.get(i - 1), waypoints.get(i));
                 for (WP wp : validatedPair) {
                     validatedWaypoints.add(new Target(wp.x, wp.y, wp.t, true));
                 }
             } else {
                 validatedWaypoints.add(target1);
-                validatedWaypoints.add(target2);
+                //validatedWaypoints.add(target2);
             }
         }
         validatedWaypoints.add(waypoints.get(waypoints.size() - 1));
@@ -628,17 +629,19 @@ public class MapPanel extends JPanel {
             // If we have a valid intersection, add it along with any necessary looops
             //@todo: Choose best intersection
             if (i_sA1_to_s2.valid) {
-                System.out.println("\ti1_A1.valid");
+                System.out.println("\ti_sA1_to_s2 valid");
 
+                // Have already added WP at s1
                 WP[] loopWPs = getTurnWaypoints(i_sA1_to_s2.x, i_sA1_to_s2.y, i_sA1_to_s2.t1, t2);
                 for (int i = 0; i < loopWPs.length; i++) {
                     wps.add(loopWPs[i]);
                 }
                 wps.add(new WP(s2.x1, s2.y1, t2));
             } else if (i_s1_to_sA2.valid) {
-                System.out.println("\ti1_A2.valid");
+                System.out.println("\ti_s1_to_sA2 valid");
 
-                WP[] loopWPs = getTurnWaypoints(i_s1_to_sA2.x, i_s1_to_sA2.y, i_s1_to_sA2.t1, t2);
+                wps.add(new WP(i_s1_to_sA2.x, i_s1_to_sA2.y, i_s1_to_sA2.t1));
+                WP[] loopWPs = getTurnWaypoints(sA2.x1, sA2.y1, i_s1_to_sA2.t2, t2);
                 for (int i = 0; i < loopWPs.length; i++) {
                     wps.add(loopWPs[i]);
                 }
@@ -657,7 +660,7 @@ public class MapPanel extends JPanel {
 
             // If we have a valid intersection, add it along with any necessary looops
             if (i_sA_to_s2.valid) {
-                System.out.println("\ti1_1.valid");
+                System.out.println("\ti_sA_to_s2 valid");
 
                 WP[] loopWPs = getTurnWaypoints(i_sA_to_s2.x, i_sA_to_s2.y, i_sA_to_s2.t1, t2);
                 for (int i = 0; i < loopWPs.length; i++) {
@@ -665,7 +668,7 @@ public class MapPanel extends JPanel {
                 }
             } else {
                 // The first set of orthogonal lines did not have a valid intersection, we will need a second line of orthogonal lines which are orthogonal to the first set
-                System.out.println("\ti1_1 invalid");
+                System.out.println("\ti_sA_to_s2 invalid");
 
                 double tB = sanitize(t1 + Math.PI);
                 // Vector parallel to s1 but MIN_DISTANCE to its left
@@ -692,7 +695,7 @@ public class MapPanel extends JPanel {
                 Intersection i_sA_to_sB3 = getIntersection(sA, sB3);
 
                 if (i_sB1_to_s2.valid) {
-                    System.out.println("\t\tiB1.valid");
+                    System.out.println("\t\ti_sB1_to_s2 valid");
 
                     // Add intersection between sA and sB1
                     wps.add(new WP(sB1.x1, sB1.y1, tB));
@@ -701,7 +704,7 @@ public class MapPanel extends JPanel {
                         wps.add(loopWPs[i]);
                     }
                 } else if (i_sB2_to_s2.valid) {
-                    System.out.println("\t\tiB2.valid");
+                    System.out.println("\t\ti_sB2_to_s2 valid");
 
                     // Add intersection between sA and sB2
                     wps.add(new WP(sB2.x1, sB2.y1, tB));
@@ -710,7 +713,7 @@ public class MapPanel extends JPanel {
                         wps.add(loopWPs[i]);
                     }
                 } else if (i_sA_to_sB3.valid) {
-                    System.out.println("\t\ti1_2c.valid");
+                    System.out.println("\t\ti_sA_to_sB3 valid");
 
                     // Add intersection between sA and sB3
                     wps.add(new WP(i_sA_to_sB3.x, i_sA_to_sB3.y, tB));
@@ -720,8 +723,8 @@ public class MapPanel extends JPanel {
                     }
                 }
             }
-        } else if ((i_s1_to_s2.d1 < 0 && i_s1_to_s2.d2 < 0) ||
-                (Double.isNaN(i_s1_to_s2.d1) && Double.isNaN(i_s1_to_s2.d2))) {
+        } else if ((i_s1_to_s2.d1 < 0 && i_s1_to_s2.d2 < 0)
+                || (Double.isNaN(i_s1_to_s2.d1) && Double.isNaN(i_s1_to_s2.d2))) {
             // Case 4: Intersection is behind WP1 but in front of WP2
             System.out.println("CASE 4");
 
@@ -739,16 +742,18 @@ public class MapPanel extends JPanel {
             // If we have a valid intersection, add it along with any necessary looops
             //@todo: Choose best intersection
             if (i_sA1_to_s2.valid) {
-                System.out.println("\tiA1.valid");
+                System.out.println("\ti_sA1_to_s2 valid");
 
+                // Have already added WP at s1
                 WP[] loopWPs = getTurnWaypoints(i_sA1_to_s2.x, i_sA1_to_s2.y, i_sA1_to_s2.t2, t2);
                 for (int i = 0; i < loopWPs.length; i++) {
                     wps.add(loopWPs[i]);
                 }
             } else if (i_s1_to_sA2.valid) {
-                System.out.println("\tiA2.valid");
+                System.out.println("\ti_s1_to_sA2 valid");
 
-                WP[] loopWPs = getTurnWaypoints(i_s1_to_sA2.x, i_s1_to_sA2.y, i_s1_to_sA2.t2, t2);
+                wps.add(new WP(i_s1_to_sA2.x, i_s1_to_sA2.y, i_s1_to_sA2.t1));
+                WP[] loopWPs = getTurnWaypoints(sA2.x1, sA2.y1, i_s1_to_sA2.t2, t2);
                 for (int i = 0; i < loopWPs.length; i++) {
                     wps.add(loopWPs[i]);
                 }
@@ -781,7 +786,7 @@ public class MapPanel extends JPanel {
                 Intersection i_sA1_to_sB3 = getIntersection(sA1, sB3);
 
                 if (i_sB1_to_s2.valid) {
-                    System.out.println("\t\tiB1.valid");
+                    System.out.println("\t\ti_sB1_to_s2 valid");
 
                     // Add intersection between sA and sB1
                     wps.add(new WP(sB1.x1, sB1.y1, tB));
@@ -790,7 +795,7 @@ public class MapPanel extends JPanel {
                         wps.add(loopWPs[i]);
                     }
                 } else if (i_sB2_to_s2.valid) {
-                    System.out.println("\t\tiB2.valid");
+                    System.out.println("\t\ti_sB2_to_s2 valid");
 
                     // Add intersection between sA and sB2
                     wps.add(new WP(sB2.x1, sB2.y1, tB));
@@ -799,7 +804,7 @@ public class MapPanel extends JPanel {
                         wps.add(loopWPs[i]);
                     }
                 } else if (i_sA1_to_sB3.valid) {
-                    System.out.println("\t\tiB3.valid");
+                    System.out.println("\t\ti_sA1_to_sB3 valid");
 
                     // Add intersection between sA and sB3
                     wps.add(new WP(i_sA1_to_sB3.x, i_sA1_to_sB3.y, tB));
@@ -898,7 +903,7 @@ public class MapPanel extends JPanel {
         }
         x = ((s1.x1 * s1.y2 - s1.y1 * s1.x2) * (s2.x1 - s2.x2) - (s1.x1 - s1.x2) * (s2.x1 * s2.y2 - s2.y1 * s2.x2)) / denom;
         y = ((s1.x1 * s1.y2 - s1.y1 * s1.x2) * (s2.y1 - s2.y2) - (s1.y1 - s1.y2) * (s2.x1 * s2.y2 - s2.y1 * s2.x2)) / denom;
-
+        
         //Find the angle from wp1 to intersection (rad)
         t1 = sanitize(Math.atan2(y - s1.y1, x - s1.x1));
         //Find the angle from intersection to wp2 (rad)
